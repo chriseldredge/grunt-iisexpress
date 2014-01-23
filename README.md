@@ -171,6 +171,42 @@ grunt.registerTask('iisexpress-killer', function(){
 grunt.registerTask('default', ['iisexpress', 'iisexpress-killer']);
 ```
 
+#### Killing IIS Express on SIGINT
+If you are using grunt-iisexpress in conjunction with [grunt-contrib-watch](https://github.com/gruntjs/grunt-contrib-watch), you may want to shut down IIS Express
+when grunt shuts down.
+
+One way to do this is to capture SIGINT and wire an event to grunt-iisexpress:
+
+```js
+grunt.initConfig({
+    iisexpress: {
+        options: {
+            port: 9000,
+            open: true,
+            killOn: 'SIGINT'
+            path: 'dist'
+        }
+    }
+});
+
+grunt.registerTask('serve', function (target, server) {
+    var readLine = require ('readline');
+    var rl = readLine.createInterface ({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    rl.on ('SIGINT', function (){
+        grunt.event.emit('SIGINT');
+        process.exit();
+    });
+
+    grunt.task.run(['build', 'iisexpress', 'watch']);
+}
+```
+
+Pressing `ctrl+c` will now stop IIS Express before grunt exits.
+
 ## Contributing
 In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
 
